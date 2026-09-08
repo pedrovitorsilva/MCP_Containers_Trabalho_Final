@@ -1,0 +1,13 @@
+{
+  "name": "mercadinho-sao-miguel-base",
+  "version": "1.0.0",
+  "description": "Dependencias compartilhadas pelos microsservicos do Mercadinho Sao Miguel (instaladas em /node_modules na imagem base)",
+  "private": true,
+  "type": "module",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.5"
+  }
+}

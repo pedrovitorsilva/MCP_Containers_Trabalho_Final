@@ -1,0 +1,43 @@
+services:
+  mcp-produtos:
+    build: .
+    container_name: mcp-produtos
+    hostname: mcp-produtos
+    restart: always
+    volumes:
+      - ./produtos:/mcp
+    command: python3 /mcp/mcp_servico.py
+    ports:
+      - "8001:8000"
+    networks:
+      - rede-mercadinho
+
+  mcp-pessoas:
+    build: .
+    container_name: mcp-pessoas
+    hostname: mcp-pessoas
+    restart: always
+    volumes:
+      - ./pessoas:/mcp
+    command: python3 /mcp/mcp_servico.py
+    ports:
+      - "8002:8000"
+    networks:
+      - rede-mercadinho
+
+  mcp-vendas:
+    build: .
+    container_name: mcp-vendas
+    hostname: mcp-vendas
+    restart: always
+    volumes:
+      - ./vendas:/mcp
+    command: python3 /mcp/mcp_servico.py
+    ports:
+      - "8003:8000"
+    networks:
+      - rede-mercadinho
+
+networks:
+  rede-mercadinho:
+    external: true

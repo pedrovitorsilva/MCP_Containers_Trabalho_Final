@@ -1,0 +1,88 @@
+services:
+  miguel-mongodb:
+    image: mongo:latest
+    container_name: miguel-mongodb
+    hostname: miguel-mongodb
+    restart: always
+    ports:
+      - "7004:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=mercadinho
+    volumes:
+      - dados_mongodb:/data/db
+      - ./init-db.js:/docker-entrypoint-initdb.d/init-db.js:ro
+    networks:
+      - rede-mercadinho
+
+  miguel-produtos:
+    build: .
+    container_name: miguel-produtos
+    hostname: miguel-produtos
+    restart: always
+    volumes:
+      - ./produtos:/servico
+    command: node server.js
+    ports:
+      - "7001:8000"
+    depends_on:
+      - miguel-mongodb
+    environment:
+      - MONGODB_CONNECTION=mongodb://miguel-mongodb:27017/mercadinho
+      - NOME_SERVICO=miguel-produtos
+    networks:
+      - rede-mercadinho
+
+  miguel-pessoas:
+    build: .
+    container_name: miguel-pessoas
+    hostname: miguel-pessoas
+    restart: always
+    volumes:
+      - ./pessoas:/servico
+    command: node server.js
+    ports:
+      - "7002:8000"
+    depends_on:
+      - miguel-mongodb
+    environment:
+      - MONGODB_CONNECTION=mongodb://miguel-mongodb:27017/mercadinho
+      - NOME_SERVICO=miguel-pessoas
+    networks:
+      - rede-mercadinho
+
+  miguel-vendas:
+    build: .
+    container_name: miguel-vendas
+    hostname: miguel-vendas
+    restart: always
+    volumes:
+      - ./vendas:/servico
+    command: node server.js
+    ports:
+      - "7003:8000"
+    depends_on:
+      - miguel-mongodb
+    environment:
+      - MONGODB_CONNECTION=mongodb://miguel-mongodb:27017/mercadinho
+      - NOME_SERVICO=miguel-vendas
+    networks:
+      - rede-mercadinho
+
+  miguel-frontend:
+    image: nginx:alpine
+    container_name: miguel-frontend
+    hostname: miguel-frontend
+    restart: always
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    ports:
+      - "3000:80"
+    networks:
+      - rede-mercadinho
+
+volumes:
+  dados_mongodb:
+
+networks:
+  rede-mercadinho:
+    external: true

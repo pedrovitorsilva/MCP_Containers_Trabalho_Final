@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mercadinho São Miguel — Painel</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+        background: #f4f6f8;
+        color: #263238;
+      }
+
+      header {
+        background: #1b5e20;
+        color: #fff;
+        padding: 20px 30px;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 25px;
+      }
+
+      header p {
+        margin: 6px 0 14px;
+        opacity: 0.85;
+      }
+
+      .servicos {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: rgba(255, 255, 255, 0.14);
+        border-radius: 20px;
+        padding: 5px 13px;
+        font-size: 13px;
+      }
+
+      .bolinha {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #ffc107;
+      }
+
+      .pill.ok .bolinha {
+        background: #76ff03;
+      }
+
+      .pill.fora .bolinha {
+        background: #ff5252;
+      }
+
+      button.recarregar {
+        margin-left: auto;
+        background: #fff;
+        color: #1b5e20;
+        border: 0;
+        border-radius: 6px;
+        padding: 7px 15px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      main {
+        max-width: 1400px;
+        margin: 25px auto 60px;
+        padding: 0 20px;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 22px;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 18px 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .card-title {
+        color: #607d8b;
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+
+      .card-value {
+        font-size: 27px;
+        font-weight: bold;
+      }
+
+      .card-value.indisponivel {
+        color: #b0bec5;
+        font-size: 20px;
+      }
+
+      .panel {
+        background: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .panel-head h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .fonte {
+        font-size: 12px;
+        color: #90a4ae;
+      }
+
+      .contagem {
+        margin-left: auto;
+        font-size: 12px;
+        color: #607d8b;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .grid-2 .panel {
+        margin-bottom: 0;
+      }
+
+      .table-container {
+        max-height: 380px;
+        overflow: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 9px 8px;
+        border-bottom: 1px solid #eceff1;
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      th {
+        background: #fafafa;
+        position: sticky;
+        top: 0;
+        font-size: 13px;
+      }
+
+      td.num,
+      th.num {
+        text-align: right;
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: bold;
+      }
+
+      .tag.ok {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+
+      .tag.baixo {
+        background: #ffebee;
+        color: #c62828;
+      }
+
+      .tag.Cliente {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+
+      .tag.Funcionario {
+        background: #ede7f6;
+        color: #5e35b1;
+      }
+
+      .carregando {
+        padding: 22px;
+        text-align: center;
+        color: #78909c;
+      }
+
+      .erro {
+        padding: 18px;
+        border-radius: 8px;
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+      }
+
+      .erro strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .erro small {
+        color: #8d6e63;
+        display: block;
+        margin: 6px 0 12px;
+        font-family: monospace;
+      }
+
+      .erro button {
+        background: #c62828;
+        color: #fff;
+        border: 0;
+        border-radius: 5px;
+        padding: 6px 14px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      .vazio {
+        padding: 20px;
+        text-align: center;
+        color: #90a4ae;
+      }
+
+      @media (max-width: 1000px) {
+        .cards {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .cards {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>Mercadinho São Miguel</h1>
+      <p>Painel administrativo — consome os três microsserviços de forma independente</p>
+      <div class="servicos">
+        <span class="pill" id="pill-produtos"
+          ><span class="bolinha"></span> produtos :7001</span
+        >
+        <span class="pill" id="pill-pessoas"
+          ><span class="bolinha"></span> pessoas :7002</span
+        >
+        <span class="pill" id="pill-vendas"
+          ><span class="bolinha"></span> vendas :7003</span
+        >
+        <button class="recarregar" onclick="carregarTudo()">Recarregar tudo</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="cards">
+        <div class="card">
+          <div class="card-title">Produtos cadastrados</div>
+          <div class="card-value" id="kpi-produtos">—</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Produtos com estoque baixo</div>
+          <div class="card-value" id="kpi-estoque-baixo">—</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Clientes cadastrados</div>
+          <div class="card-value" id="kpi-clientes">—</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Total vendido</div>
+          <div class="card-value" id="kpi-vendas">—</div>
+        </div>
+      </section>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Produtos</h2>
+          <span class="fonte">miguel-produtos · GET /produtos</span>
+          <span class="contagem" id="contagem-produtos"></span>
+        </div>
+        <div id="secao-produtos" class="table-container">
+          <div class="carregando">Carregando produtos…</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Campanhas</h2>
+            <span class="fonte">miguel-produtos · GET /campanha</span>
+            <span class="contagem" id="contagem-campanhas"></span>
+          </div>
+          <div id="secao-campanhas" class="table-container">
+            <div class="carregando">Carregando campanhas…</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Entradas de estoque</h2>
+            <span class="fonte">miguel-produtos · GET /entrada</span>
+            <span class="contagem" id="contagem-entradas"></span>
+          </div>
+          <div id="secao-entradas" class="table-container">
+            <div class="carregando">Carregando entradas…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top: 20px">
+        <div class="panel-head">
+          <h2>Clientes e funcionários</h2>
+          <span class="fonte">miguel-pessoas · GET /pessoa</span>
+          <span class="contagem" id="contagem-pessoas"></span>
+        </div>
+        <div id="secao-pessoas" class="table-container">
+          <div class="carregando">Carregando pessoas…</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Vendas</h2>
+            <span class="fonte">miguel-vendas · GET /vendas</span>
+            <span class="contagem" id="contagem-vendas"></span>
+          </div>
+          <div id="secao-vendas" class="table-container">
+            <div class="carregando">Carregando vendas…</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Resgates de pontos</h2>
+            <span class="fonte">miguel-vendas · GET /resgate</span>
+            <span class="contagem" id="contagem-resgates"></span>
+          </div>
+          <div id="secao-resgates" class="table-container">
+            <div class="carregando">Carregando resgates…</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const SERVICOS = {
+        produtos: "http://localhost:7001",
+        pessoas: "http://localhost:7002",
+        vendas: "http://localhost:7003",
+      };
+
+      const TIMEOUT_MS = 8000;
+
+      async function buscarJson(url) {
+        const resposta = await fetch(url, {
+          signal: AbortSignal.timeout(TIMEOUT_MS),
+        });
+        if (!resposta.ok) {
+          throw new Error(`HTTP ${resposta.status} ${resposta.statusText}`);
+        }
+        return resposta.json();
+      }
+
+      async function carregarSecao(nome, url, elementoId, render, aoFalhar) {
+        const alvo = document.getElementById(elementoId);
+        alvo.innerHTML = `<div class="carregando">Carregando ${nome.toLowerCase()}…</div>`;
+
+        try {
+          const dados = await buscarJson(url);
+          render(Array.isArray(dados) ? dados : [dados]);
+        } catch (erro) {
+          const motivo =
+            erro.name === "TimeoutError"
+              ? "tempo de resposta esgotado"
+              : erro.message;
+
+          alvo.innerHTML = `
+            <div class="erro">
+              <strong>⚠️ Serviço "${nome}" indisponível no momento.</strong>
+              As demais seções deste painel continuam funcionando normalmente.
+              <small>${url} — ${motivo}</small>
+              <button data-secao="${elementoId}">Tentar novamente</button>
+            </div>`;
+
+          alvo
+            .querySelector("button")
+            .addEventListener("click", () => RECARGAS[elementoId]());
+
+          if (aoFalhar) aoFalhar();
+        }
+      }
+
+      const RECARGAS = {};
+
+      const moeda = (valor) =>
+        Number(valor || 0).toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
+
+      const data = (valor) =>
+        valor ? new Date(valor).toLocaleDateString("pt-BR") : "—";
+
+      const txt = (valor) =>
+        String(valor ?? "—")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
+      function tabela(alvoId, cabecalhos, linhas, contagemId) {
+        const alvo = document.getElementById(alvoId);
+
+        if (contagemId) {
+          document.getElementById(contagemId).textContent =
+            `${linhas.length} registro(s)`;
+        }
+
+        if (linhas.length === 0) {
+          alvo.innerHTML = '<div class="vazio">Nenhum registro encontrado.</div>';
+          return;
+        }
+
+        const ths = cabecalhos
+          .map((c) => `<th class="${c.num ? "num" : ""}">${c.titulo}</th>`)
+          .join("");
+
+        alvo.innerHTML = `
+          <table>
+            <thead><tr>${ths}</tr></thead>
+            <tbody>${linhas.join("")}</tbody>
+          </table>`;
+      }
+
+      function kpi(id, valor, disponivel = true) {
+        const elemento = document.getElementById(id);
+        elemento.textContent = disponivel ? valor : "indisponível";
+        elemento.classList.toggle("indisponivel", !disponivel);
+      }
+
+      function marcarServico(servico, estado) {
+        const pill = document.getElementById(`pill-${servico}`);
+        pill.classList.remove("ok", "fora");
+        if (estado) pill.classList.add(estado);
+      }
+
+      async function verificarServico(servico) {
+        try {
+          await buscarJson(`${SERVICOS[servico]}/health`);
+          marcarServico(servico, "ok");
+        } catch {
+          marcarServico(servico, "fora");
+        }
+      }
+
+      function renderProdutos(produtos) {
+        const linhas = produtos.map((p) => {
+          const baixo = Number(p.qtd_atual) <= Number(p.qtd_minima);
+          return `
+            <tr>
+              <td>${txt(p.nome)}</td>
+              <td>${txt(p.descricao)}</td>
+              <td>${txt(p.codigo_barras)}</td>
+              <td class="num">${moeda(p.preco_venda)}</td>
+              <td class="num">${txt(p.qtd_atual)}</td>
+              <td class="num">${txt(p.qtd_minima)}</td>
+              <td><span class="tag ${baixo ? "baixo" : "ok"}">${
+                baixo ? "repor" : "ok"
+              }</span></td>
+              <td class="num">${(p.campanhas_ativas || []).length}</td>
+            </tr>`;
+        });
+
+        tabela(
+          "secao-produtos",
+          [
+            { titulo: "Produto" },
+            { titulo: "Descrição" },
+            { titulo: "Código de barras" },
+            { titulo: "Preço", num: true },
+            { titulo: "Estoque", num: true },
+            { titulo: "Mínimo", num: true },
+            { titulo: "Situação" },
+            { titulo: "Campanhas", num: true },
+          ],
+          linhas,
+          "contagem-produtos",
+        );
+
+        kpi("kpi-produtos", produtos.length);
+        kpi(
+          "kpi-estoque-baixo",
+          produtos.filter((p) => Number(p.qtd_atual) <= Number(p.qtd_minima))
+            .length,
+        );
+      }
+
+      function renderCampanhas(campanhas) {
+        const agora = Date.now();
+        const linhas = campanhas.map((c) => {
+          const ativa =
+            new Date(c.data_inicio).getTime() <= agora &&
+            new Date(c.data_termino).getTime() >= agora;
+          return `
+            <tr>
+              <td>${txt(c.descricao)}</td>
+              <td>${txt(c.tipo_desconto)}</td>
+              <td>${data(c.data_inicio)}</td>
+              <td>${data(c.data_termino)}</td>
+              <td><span class="tag ${ativa ? "ok" : "baixo"}">${
+                ativa ? "ativa" : "fora de vigência"
+              }</span></td>
+            </tr>`;
+        });
+
+        tabela(
+          "secao-campanhas",
+          [
+            { titulo: "Campanha" },
+            { titulo: "Desconto" },
+            { titulo: "Início" },
+            { titulo: "Término" },
+            { titulo: "Situação" },
+          ],
+          linhas,
+          "contagem-campanhas",
+        );
+      }
+
+      function renderEntradas(entradas) {
+        const linhas = entradas.map((e) => {
+          const itens = e.itens || [];
+          const nomes = itens.map((i) => i.nome_produto).join(", ");
+          return `
+            <tr>
+              <td>${data(e.data_entrada)}</td>
+              <td>${txt(
+                typeof e.id_fornecedor === "object" && e.id_fornecedor
+                  ? e.id_fornecedor.nome
+                  : e.id_fornecedor,
+              )}</td>
+              <td>${txt(nomes)}</td>
+              <td class="num">${itens.length}</td>
+              <td class="num">${moeda(e.valor_total)}</td>
+            </tr>`;
+        });
+
+        tabela(
+          "secao-entradas",
+          [
+            { titulo: "Data" },
+            { titulo: "Fornecedor" },
+            { titulo: "Itens" },
+            { titulo: "Qtd. itens", num: true },
+            { titulo: "Valor", num: true },
+          ],
+          linhas,
+          "contagem-entradas",
+        );
+      }
+
+      function renderPessoas(pessoas) {
+        const linhas = pessoas.map((p) => {
+          const endereco = p.endereco
+            ? [p.endereco.cidade, p.endereco.uf].filter(Boolean).join(" / ")
+            : "";
+          return `
+            <tr>
+              <td>${txt(p.nome)}</td>
+              <td><span class="tag ${txt(p.tipo_pessoa)}">${txt(
+                p.tipo_pessoa,
+              )}</span></td>
+              <td>${txt(p.cpf)}</td>
+              <td>${txt(p.cargo)}</td>
+              <td>${txt(p.telefone)}</td>
+              <td class="num">${txt(p.pontos_acumulados ?? 0)}</td>
+              <td>${txt(endereco || "—")}</td>
+            </tr>`;
+        });
+
+        tabela(
+          "secao-pessoas",
+          [
+            { titulo: "Nome" },
+            { titulo: "Tipo" },
+            { titulo: "CPF" },
+            { titulo: "Cargo" },
+            { titulo: "Telefone" },
+            { titulo: "Pontos", num: true },
+            { titulo: "Cidade / UF" },
+          ],
+          linhas,
+          "contagem-pessoas",
+        );
+
+        kpi(
+          "kpi-clientes",
+          pessoas.filter((p) => p.tipo_pessoa === "Cliente").length,
+        );
+      }
+
+      function renderVendas(vendas) {
+        const linhas = vendas.map((v) => {
+          const itens = v.itens || [];
+          const pagamentos = (v.pagamentos || []).map((p) => p.tipo).join(", ");
+          return `
+            <tr>
+              <td>${data(v.data_venda)}</td>
+              <td>${txt(
+                typeof v.id_cliente === "object" && v.id_cliente
+                  ? v.id_cliente.nome
+                  : v.id_cliente,
+              )}</td>
+              <td class="num">${itens.length}</td>
+              <td>${txt(pagamentos || "—")}</td>
+              <td class="num">${txt(v.pontos_ganhos_total ?? 0)}</td>
+              <td class="num">${moeda(v.valor_total)}</td>
+            </tr>`;
+        });
+
+        tabela(
+          "secao-vendas",
+          [
+            { titulo: "Data" },
+            { titulo: "Cliente" },
+            { titulo: "Itens", num: true },
+            { titulo: "Pagamento" },
+            { titulo: "Pontos", num: true },
+            { titulo: "Valor", num: true },
+          ],
+          linhas,
+          "contagem-vendas",
+        );
+
+        const total = vendas.reduce((soma, v) => soma + Number(v.valor_total || 0), 0);
+        kpi("kpi-vendas", moeda(total));
+      }
+
+      function renderResgates(resgates) {
+        const linhas = resgates.map((r) => {
+          const itens = (r.itens_resgatados || [])
+            .map((i) => `${i.quantidade}x ${i.nome_produto}`)
+            .join(", ");
+          return `
+            <tr>
+              <td>${data(r.data_resgate)}</td>
+              <td>${txt(r.id_cliente)}</td>
+              <td>${txt(itens)}</td>
+              <td class="num">${txt(r.pontos_usados_total)}</td>
+            </tr>`;
+        });
+
+        tabela(
+          "secao-resgates",
+          [
+            { titulo: "Data" },
+            { titulo: "Cliente (código)" },
+            { titulo: "Itens resgatados" },
+            { titulo: "Pontos", num: true },
+          ],
+          linhas,
+          "contagem-resgates",
+        );
+      }
+
+      const SECOES = [
+        {
+          nome: "Produtos",
+          url: `${SERVICOS.produtos}/produtos`,
+          elemento: "secao-produtos",
+          render: renderProdutos,
+          contagem: "contagem-produtos",
+          kpis: ["kpi-produtos", "kpi-estoque-baixo"],
+        },
+        {
+          nome: "Campanhas",
+          url: `${SERVICOS.produtos}/campanha`,
+          elemento: "secao-campanhas",
+          render: renderCampanhas,
+          contagem: "contagem-campanhas",
+        },
+        {
+          nome: "Entradas",
+          url: `${SERVICOS.produtos}/entrada`,
+          elemento: "secao-entradas",
+          render: renderEntradas,
+          contagem: "contagem-entradas",
+        },
+        {
+          nome: "Pessoas",
+          url: `${SERVICOS.pessoas}/pessoa`,
+          elemento: "secao-pessoas",
+          render: renderPessoas,
+          contagem: "contagem-pessoas",
+          kpis: ["kpi-clientes"],
+        },
+        {
+          nome: "Vendas",
+          url: `${SERVICOS.vendas}/vendas`,
+          elemento: "secao-vendas",
+          render: renderVendas,
+          contagem: "contagem-vendas",
+          kpis: ["kpi-vendas"],
+        },
+        {
+          nome: "Resgates",
+          url: `${SERVICOS.vendas}/resgate`,
+          elemento: "secao-resgates",
+          render: renderResgates,
+          contagem: "contagem-resgates",
+        },
+      ];
+
+      for (const secao of SECOES) {
+        RECARGAS[secao.elemento] = () =>
+          carregarSecao(secao.nome, secao.url, secao.elemento, secao.render, () => {
+            (secao.kpis || []).forEach((id) => kpi(id, null, false));
+            if (secao.contagem) {
+              document.getElementById(secao.contagem).textContent = "—";
+            }
+          });
+      }
+
+      function carregarTudo() {
+        Object.keys(SERVICOS).forEach(verificarServico);
+        Object.values(RECARGAS).forEach((recarregar) => recarregar());
+      }
+
+      carregarTudo();
+      setInterval(carregarTudo, 30000);
+    </script>
+  </body>
+</html>
