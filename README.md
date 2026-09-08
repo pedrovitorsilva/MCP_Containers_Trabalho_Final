@@ -1,6 +1,4 @@
-# Mercadinho São Miguel — Microsserviços, MCP e Chatbot 
-
-<img src="./img/Logotipo_IF.svg" alt="Alt text" width="20" height="30"/>
+# Mercadinho São Miguel — Microsserviços, MCP e Chatbot  <img src="./img/Logotipo_IF.svg" alt="Alt text" width="20" height="30"/>
 
 <p>
   <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
@@ -20,7 +18,7 @@ Entrega final da avaliação da disciplina de **Desenvolvimento de Aplicações 
 O trabalho utiliza como base a entrega do trabalho da disciplina de [Programação WEB 1](https://github.com/pedrovitorsilva/trabalho-web-pos-01), refatorando um monolito em um sistema de 
 microsserviços conteinerizados, conforme a proposta no [Documento de Orientações da Avaliação](./orient_servicos_avaliacao_descritivo.pdf).
 
-## [Estrutura de pastas](./docs/estrutura_pastas.md)
+#### [Estrutura de Pastas](#estrutura-de-pastas)
 
 O trabalho possui as seguintes composições:
 
@@ -197,3 +195,11 @@ python chat_mercadinho.py
 - Conecta com os serviços MCP disponíveis
 - Comandos de saída: `sair`, `exit`, `quit`, `tchau`
 
+
+## Estrutura de Pastas
+
+<div style="overflow-y: auto; max-height: 500px; padding: 30px; border: 30px">
+
+<img src="./docs/estrutura_pastas..svg" alt="Diagrama da estrutura de pastas do projeto" />
+
+</div>
