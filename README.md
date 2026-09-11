@@ -13,10 +13,10 @@
   <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3" />
 </p>
 
-Entrega final da avaliação da disciplina de **Desenvolvimento de Aplicações Orientadas a Serviços**, Pós Graduação em Desenvolvimetno WEB, no IFBA - Campus Vitória da Conquista.
+Entrega final da avaliação da disciplina de **Desenvolvimento de Aplicações Orientadas a Serviços**, Pós Graduação em Desenvolvimento WEB, no IFBA - Campus Vitória da Conquista.
 
 O trabalho utiliza como base a entrega do trabalho da disciplina de [Programação WEB 1](https://github.com/pedrovitorsilva/trabalho-web-pos-01), refatorando um monolito em um sistema de 
-microsserviços conteinerizados, conforme a proposta no [Documento de Orientações da Avaliação](./orient_servicos_avaliacao_descritivo.pdf).
+microsserviços conteinerizados, conforme a proposta no [Documento de Orientações da Avaliação](./docs/orient_servicos_avaliacao_descritivo.pdf).
 
 #### [Estrutura de Pastas](#estrutura-de-pastas)
 

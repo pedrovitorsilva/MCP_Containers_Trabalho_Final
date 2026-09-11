@@ -24,4 +24,5 @@ Thumbs.db
 *.swp
 
 # Logs
-*.log
+*.log/
+video.*
