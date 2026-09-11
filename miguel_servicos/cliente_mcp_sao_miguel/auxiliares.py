@@ -1,7 +1,9 @@
 import asyncio
 import json
 import os
+import time
 from contextlib import AsyncExitStack
+from datetime import datetime
 
 from dotenv import load_dotenv
 from mcp import ClientSession
@@ -11,6 +13,7 @@ from google import genai
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
+from rich.rule import Rule
 from rich import box
 
 MODELO = "gemini-3.1-flash-lite"
@@ -37,6 +40,8 @@ SERVICOS_MCP = {
     "vendas":   "http://localhost:8003/mcp",
 }
 
+TIMEOUT_CONEXAO_SERVICO = 10  # segundos
+
 
 async def iniciar():
     """Cria o cliente de IA (Foi pensado para ser Gemini) a partir da API key do ambiente"""
@@ -56,20 +61,40 @@ async def conectar_servicos(stack):
     servicos = {}
 
     for nome_servico, url in SERVICOS_MCP.items():
+        stack_servico = AsyncExitStack()
+
         try:
-            stream_leitura, stream_escrita = await stack.enter_async_context(
+            stream_leitura, stream_escrita = await stack_servico.enter_async_context(
                 streamable_http_client(url)
             )
 
-            conexao = await stack.enter_async_context(
+            conexao = await stack_servico.enter_async_context(
                 ClientSession(stream_leitura, stream_escrita)
             )
-            await conexao.initialize()
+            await asyncio.wait_for(conexao.initialize(), timeout=TIMEOUT_CONEXAO_SERVICO)
+
+            # Só passa a conexão para o stack principal (mantido até o fim da
+            # aplicação) depois que ela conecta com sucesso, evitando deixar
+            # transportes quebrados registrados para fechamento posterior.
+            await stack.enter_async_context(stack_servico.pop_all())
 
             servicos[nome_servico] = conexao
             console.print(f"[green]✅ Conectado ao serviço '{nome_servico}'[/green]")
-        except Exception as e:
-            console.print(f"[red]⚠️  Erro ao conectar ao serviço '{nome_servico}': {e}[/red]")
+        except (Exception, asyncio.CancelledError) as e:
+            # asyncio.CancelledError não herda de Exception (Python 3.8+): quando o
+            # serviço está offline, o transporte MCP cancela internamente sua task de
+            # leitura e essa exceção escapa de um `except Exception` comum, deixando
+            # stack_servico sem fechar (o GC fecha depois, em outro contexto, e
+            # derruba a aplicação com "cancel scope in different task"). Por isso
+            # tratamos aqui como uma falha de conexão recuperável.
+            console.print(
+                f"[red]⚠️  Erro ao conectar ao serviço '{nome_servico}' "
+                f"(pode estar offline): {e}[/red]"
+            )
+            try:
+                await stack_servico.aclose()
+            except Exception:
+                pass
 
     return servicos
 
@@ -136,12 +161,10 @@ def extrair_texto(resultado):
 async def chat(cliente_IA, ferramentas, servicos_conectados):
     """Loop interativo do chat: recebe perguntas, chama a IA e executa ferramentas até obter resposta final"""
     console.print(Panel(
-        f"[bold cyan]MiguelBot[/bold cyan]\n"
+        f"[bold orange3]🛒 MiguelBot[/bold orange3]\n"
         f"Assistente virtual do Mercadinho São Miguel\n\n"
         f"[dim]Serviços conectados:[/dim]\n"
         + "\n".join([f"  [green]✅[/green] {s}" for s in servicos_conectados]),
-        title="[bold orange3]Mercadinho São Miguel[/bold orange3]",
-        title_align="left",
         border_style="orange3",
         box=box.ROUNDED,
     ))
@@ -154,27 +177,21 @@ async def chat(cliente_IA, ferramentas, servicos_conectados):
     ]
 
     while True:
-        pergunta = Prompt.ask("\n[bold cyan]Você[/bold cyan] ›")
+        console.print(Rule(style="dim"))
+        pergunta = Prompt.ask("[bold cyan]›[/bold cyan]")
 
         if pergunta.strip().lower() in ("sair", "exit", "quit", "tchau", "/s"):
             console.print("[dim]Até logo! 👋[/dim]")
             break
-
-        console.print(Panel(
-            pergunta,
-            title="[cyan]Você[/cyan]",
-            title_align="left",
-            border_style="cyan",
-            box=box.ROUNDED,
-            expand=False,
-        ))
 
         mensagens.append({
             "type": "user_input",
             "content": [{"type": "text", "text": pergunta}]
         })
 
-        with console.status("[bold yellow]MiguelBot está pensando...[/bold yellow]", spinner="dots"):
+        inicio = time.time()
+
+        with console.status("[bold yellow]✳ MiguelBot está pensando...[/bold yellow]", spinner="dots"):
             while True:
                 try:
                     resposta = await cliente_IA.aio.interactions.create(
@@ -191,14 +208,13 @@ async def chat(cliente_IA, ferramentas, servicos_conectados):
                 ]
 
                 if not execucoes:
-                    console.print(Panel(
-                        resposta.output_text,
-                        title="[green]MiguelBot[/green]",
-                        title_align="left",
-                        border_style="green",
-                        box=box.ROUNDED,
-                    ))
+                    duracao = time.time() - inicio
+                    hora = datetime.now().strftime("%H:%M")
+
+                    console.print(f"\n[bold green]● MiguelBot[/bold green]")
+                    console.print(resposta.output_text)
                     console.print(
+                        f"[dim]✳ Respondido em {duracao:.1f}s · {hora}[/dim]  "
                         f"[black on orange3] mercadinho [/][black on blue] {MODELO} [/]"
                     )
                     break
@@ -218,4 +234,7 @@ async def chat(cliente_IA, ferramentas, servicos_conectados):
 
 async def finalizar(stack):
     """Fecha todas as conexões abertas (MCP e demais recursos) via o AsyncExitStack"""
-    await stack.aclose()
+    try:
+        await stack.aclose()
+    except Exception as e:
+        console.print(f"[dim]⚠️  Erro ao encerrar conexões MCP (ignorado): {e}[/dim]")

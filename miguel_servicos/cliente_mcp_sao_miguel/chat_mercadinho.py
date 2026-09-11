@@ -7,6 +7,7 @@ from auxiliares import (
     chat,
     finalizar,
     console,
+    SERVICOS_MCP,
 )
 
 
@@ -18,8 +19,15 @@ async def executar():
         try:
             servicos = await conectar_servicos(stack)
 
+            faltantes = [s for s in SERVICOS_MCP if s not in servicos]
+            if faltantes:
+                console.print(
+                    "[yellow]⚠️  Serviço(s) MCP indisponível(is), seguindo com "
+                    f"funcionalidade reduzida (faltando: {', '.join(faltantes)})[/yellow]"
+                )
+
             if not servicos:
-                console.print("[red]Nenhum serviço MCP foi conectado. Encerrando.[/red]")
+                console.print("[red]Nenhum serviço MCP disponível. Encerrando.[/red]")
                 return
 
             ferramentas = await get_ferramentas(servicos)
